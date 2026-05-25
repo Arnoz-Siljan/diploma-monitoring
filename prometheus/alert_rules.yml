@@ -1,0 +1,39 @@
+groups:
+  - name: system_alerts
+    interval: 30s
+    rules:
+      - alert: HighCpuUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100) > 80
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Visoka uporaba CPU ({{ $labels.instance }})"
+          description: "CPU uporaba je nad 80% za 2 minuti. Trenutna vrednost: {{ $value | printf \"%.1f\" }}%."
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Visoka uporaba pomnilnika ({{ $labels.instance }})"
+          description: "RAM uporaba je nad 85% za 2 minuti. Trenutna vrednost: {{ $value | printf \"%.1f\" }}%."
+
+      - alert: LowDiskSpace
+        expr: (node_filesystem_avail_bytes{mountpoint="/rootfs"} / node_filesystem_size_bytes{mountpoint="/rootfs"}) * 100 < 15
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Malo prostora na disku ({{ $labels.instance }})"
+          description: "Prosti prostor na disku je pod 15%. Trenutna vrednost: {{ $value | printf \"%.1f\" }}%."
+
+      - alert: InstanceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Tarča je nedostopna ({{ $labels.instance }})"
+          description: "Prometheus tarča {{ $labels.job }} na {{ $labels.instance }} se ne odziva že 1 minuto."

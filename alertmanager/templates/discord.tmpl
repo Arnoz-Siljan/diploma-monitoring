@@ -1,0 +1,15 @@
+{{ define "discord.title" }}
+{{ if eq .Status "firing" }}ALARM: {{ .GroupLabels.alertname }}{{ else }}Rešeno: {{ .GroupLabels.alertname }}{{ end }}
+{{ end }}
+
+{{ define "discord.message" }}
+{{ range .Alerts }}
+**Status:** {{ .Status }}
+**Severity:** {{ .Labels.severity }}
+**Summary:** {{ .Annotations.summary }}
+**Description:** {{ .Annotations.description }}
+**Started:** {{ .StartsAt.Format "02.01.2006 15:04:05" }}
+{{ if ne .EndsAt.Unix 0 }}**Ended:** {{ .EndsAt.Format "02.01.2006 15:04:05" }}{{ end }}
+---
+{{ end }}
+{{ end }}

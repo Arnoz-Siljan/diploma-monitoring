@@ -37,3 +37,36 @@ groups:
         annotations:
           summary: "Tarča je nedostopna ({{ $labels.instance }})"
           description: "Prometheus tarča {{ $labels.job }} na {{ $labels.instance }} se ne odziva že 1 minuto."
+
+  - name: application_alerts
+    interval: 30s
+    rules:
+      - alert: HighRequestLatency
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job="sonus-ventis"}[2m])) by (page, le)) > 0.5
+        for: 1m
+        labels:
+          severity: warning
+          team: application
+        annotations:
+          summary: "Visoka latenca za stran {{ $labels.page }}"
+          description: "p95 odzivni čas za {{ $labels.page }} je nad 500ms za 1 minuto. Trenutna vrednost: {{ $value | printf \"%.3f\" }}s."
+
+      - alert: HighErrorRate
+        expr: sum(rate(http_requests_received_total{job="sonus-ventis",code=~"5.."}[2m])) / sum(rate(http_requests_received_total{job="sonus-ventis"}[2m])) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+          team: application
+        annotations:
+          summary: "Visok delež napak (5xx) v aplikaciji"
+          description: "Več kot 5% zahtev se konča z napako 5xx za 2 minuti. Trenutna vrednost: {{ $value | humanizePercentage }}."
+
+      - alert: ApplicationDown
+        expr: up{job="sonus-ventis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: application
+        annotations:
+          summary: "Sonus Ventis aplikacija ne odgovarja"
+          description: "Prometheus ne more scrape-ati metrik iz Sonus Ventis aplikacije že 1 minuto."

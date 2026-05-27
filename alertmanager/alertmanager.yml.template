@@ -10,8 +10,8 @@ route:
 
 receivers:
   - name: 'default'
-    # Email/Slack/webhook nastavitve dodamo kasneje.
-    # Za zdaj samo logiramo - alerti bodo vidni v AlertManager UI.
+# Discord webhook URL - replace with actual URL in alertmanager.yml
+
 
 inhibit_rules:
   - source_match:

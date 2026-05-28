@@ -1,0 +1,12 @@
+Container        CPU idle  CPU load   RAM idle   RAM load
+------------------------------------------------------------
+alertmanager        0.27%     0.67%       21MB       21MB
+cadvisor            4.14%     5.33%       41MB       43MB
+elasticsearch       3.74%    40.21%     1938MB     1973MB
+grafana             0.23%     0.29%       54MB       53MB
+kibana             11.57%    13.29%      598MB      587MB
+logstash            3.78%    31.39%      722MB      784MB
+node-exporter       0.00%     0.00%        8MB        8MB
+prometheus          0.73%     0.09%       43MB       41MB
+------------------------------------------------------------
+SKUPAJ             24.46%    91.28%     3424MB     3510MB

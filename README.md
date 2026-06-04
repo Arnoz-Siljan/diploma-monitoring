@@ -1,14 +1,6 @@
-# Diplomska naloga – Monitoring in centralizirano beleženje logov
+# Diplomska naloga – Monitoring in centralizirano beleženje dnevniških zapisov
 
-Vzpostavitev in optimizacija sistema za monitoring in centralizirano beleženje logov v Linux okolju.
-
-## Tehnološki stack
-- Prometheus + Grafana (monitoring)
-- Elasticsearch + Logstash + Kibana (centralizirano beleženje)
-- AlertManager (alarmiranje)
-- ASP.NET Core 8 + Serilog (testna aplikacija)
-- Docker + Docker Compose (orkestracija)
-- Ubuntu Server 22.04 LTS
+Vzpostavitev in optimizacija sistema za monitoring in centralizirano beleženje dnevniških zapisov v Linux okolju.
 
 ## Avtor
 Arnož Siljan, FERI UM, 2026

@@ -1,6 +1,6 @@
 # 📊 Diploma Monitoring — Centralized Monitoring & Log Aggregation for a .NET Web Application
 
-**🌐 Language / Jezik:** **English** · [Slovenščina](README.sl.md)
+[Slovenščina](README.sl.md)
 
 A production-style observability stack (metrics, centralized logging, alerting and load testing) built around a real ASP.NET Core 8 web application (**Sonus Ventis**), running in Docker on an Ubuntu Server VM. Created as the practical part of a diploma thesis at UM FERI.
 

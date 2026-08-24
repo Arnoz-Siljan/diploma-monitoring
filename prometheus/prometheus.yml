@@ -1,11 +1,11 @@
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
-
 rule_files:
   - /etc/prometheus/alert_rules.yml
 
 alerting:
+
   alertmanagers:
     - static_configs:
         - targets:
@@ -27,10 +27,12 @@ scrape_configs:
   - job_name: 'alertmanager'
     static_configs:
       - targets: ['alertmanager:9093']
-
+      
   - job_name: 'sonus-ventis'
     static_configs:
       - targets: ['192.168.56.1:5230']
         labels:
           application: 'sonus-ventis'
           environment: 'local'
+
+

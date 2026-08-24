@@ -10,7 +10,7 @@ Produkcijsko zasnovan sklad za opazljivost (metrike, centralizirano beleženje l
 
 ## 📖 O projektu
 
-Repozitorij vsebuje celotno, ponovljivo infrastrukturo za monitoring, razvito za diplomsko delo *"Vzpostavitev in optimizacija sistema za monitoring in centralizirano beleženje logov v Linux okolju"*.
+Repozitorij vsebuje celotno, ponovljivo infrastrukturo za monitoring, razvito za diplomsko delo *"Vzpostavitev in optimizacija sistema za nadzor ter centralizirano beleženje dnevniških zapisov v okolju Linux"*.
 
 Realna .NET spletna aplikacija (**Sonus Ventis**) služi kot živ vir metrik in logov. Okoli nje sklad zagotavlja:
 
@@ -161,13 +161,30 @@ Alarmiranje od začetka do konca: obvestilo o proženju in nato samodejna razre�
 
 ## 🧪 Obremenitveno testiranje in analiza
 
-Večfazni **k6** scenarij (smoke → ramp-up → vzdrževana obremenitev → stress → cool-down) pošilja promet na aplikacijo, medtem ko sklad beleži vpliv.
+Večfazni **k6** scenarij (smoke → ramp-up → vzdrževana obremenitev → stress → cool-down) pošilja promet na aplikacijo, medtem ko sklad beleži vpliv. Poleg merjenja porabe je cevovod optimiziran prek petih konfiguracij, učinek pa ponovno izmerjen.
 
 - Scenarij: [`loadtest/sonus-ventis-loadtest.js`](loadtest/sonus-ventis-loadtest.js)
-- Surov k6 izpis: [`analiza/k6_output.txt`](analiza/k6_output.txt)
-- Analiza vpliva na vire (mirovanje vs. obremenitev): [`analiza/analiza.py`](analiza/analiza.py) → [`analiza/rezultati_analiza.txt`](analiza/rezultati_analiza.txt)
+- Različica z višjim pretokom: [`visoka-test.sh`](visoka-test.sh)
+- Surovi vzorci `docker stats` (4 krogi × 5 konfiguracij): [`meritve/meritve.csv`](meritve/meritve.csv)
+- Izpisi k6 po konfiguracijah: [`meritve/`](meritve/)
 
-Analiza primerja porabo CPU/RAM sklada za monitoring v mirovanju in pod obremenitvijo ter tako ovrednoti, koliko dodatne porabe vneseta monitoring in beleženje.
+**Sklop meritev.** Primerjanih je pet konfiguracij cevovoda Logstash: **A** izhodišče, **B** brez izhoda `stdout`, **C** s filtrom za zavračanje `/metrics`, **D** oboje in **E** dodatno s prilagojeno paketno obdelavo (`pipeline.batch.size: 500`, `pipeline.batch.delay: 1000`). Vsaka je bila izmerjena štirikrat, poročamo povprečje in standardni odklon.
+
+**Rezultat (poraba procesorja pod obremenitvijo, v odstotkih enega jedra):**
+
+| Komponenta | Izhodišče (A) | Optimizirano (E) |
+|---|---|---|
+| Elasticsearch | 10,34 | 3,01 |
+| Logstash | 29,91 | 7,09 |
+| Kibana | 11,17 | 7,05 |
+| cAdvisor | 3,66 | 2,99 |
+| Prometheus | 0,53 | 0,26 |
+| AlertManager | 0,64 | 0,32 |
+| Grafana | 0,32 | 0,16 |
+| Node Exporter | 0,18 | 0,24 |
+| **Skupaj** | **56,76** | **21,11** |
+
+Skupna poraba procesorja se je znižala za približno 63 %, večina tega zgolj s paketno obdelavo (približno 53 %). Cena je približno sekunda dodatne zakasnitve, brez izgube dogodkov; poraba pomnilnika je ostala praktično nespremenjena (okoli 3,6 GB), omejena s fiksnimi javanskimi kopicami. Test z višjim pretokom (približno 124 zahtevkov na sekundo) je potrdil, da poraba raste podlinearno z obremenitvijo.
 
 ---
 
@@ -188,12 +205,14 @@ diploma-monitoring/
 │   └── pipeline/logstash.conf      # Cevovod za zajem logov
 ├── loadtest/
 │   └── sonus-ventis-loadtest.js    # k6 scenarij obremenitvenega testa
-├── analiza/
-│   ├── analiza.py                  # Skripta za analizo vpliva na vire
-│   ├── idle_raw.csv / idle_clean.csv
-│   ├── load_raw.csv
-│   ├── k6_output.txt
-│   └── rezultati_analiza.txt       # Rezultati analize
+├── meritve/
+│   ├── meritve.csv                 # Surovi vzorci docker stats (4 krogi × 5 konfiguracij)
+│   ├── k6-4-A-izhodisce.txt        # izpis k6 po konfiguraciji
+│   ├── k6-4-B-brez-stdout.txt
+│   ├── k6-4-C-samo-filter.txt
+│   ├── k6-4-D-oboje.txt
+│   └── k6-4-E-paketno.txt
+├── visoka-test.sh                  # Različica testa z višjim pretokom
 └── docs/
     └── screenshots/                # Posnetki zaslona, uporabljeni v tem README-ju
 ```

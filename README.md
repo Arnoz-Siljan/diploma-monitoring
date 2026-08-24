@@ -10,7 +10,7 @@ A production-style observability stack (metrics, centralized logging, alerting a
 
 ## 📖 About
 
-This repository contains the full, reproducible monitoring infrastructure developed for the diploma thesis *"Vzpostavitev in optimizacija sistema za monitoring in centralizirano beleženje logov v Linux okolju"*.
+This repository contains the full, reproducible monitoring infrastructure developed for the diploma thesis *"Vzpostavitev in optimizacija sistema za nadzor ter centralizirano beleženje dnevniških zapisov v okolju Linux"*.
 
 A real .NET web application (**Sonus Ventis**) is used as the live source of metrics and logs. Around it, the stack provides:
 
@@ -161,13 +161,30 @@ End-to-end alerting: firing notification, then automatic resolution.
 
 ## 🧪 Load Testing & Analysis
 
-A staged **k6** scenario (smoke → ramp-up → sustained → stress → cool-down) drives traffic against the application while the stack records the impact.
+A staged **k6** scenario (smoke → ramp-up → sustained → stress → cool-down) drives traffic against the application while the stack records the impact. Beyond measuring the overhead of the stack, the pipeline is optimized across five configurations and the effect is re-measured.
 
 - Scenario: [`loadtest/sonus-ventis-loadtest.js`](loadtest/sonus-ventis-loadtest.js)
-- Raw k6 output: [`analiza/k6_output.txt`](analiza/k6_output.txt)
-- Resource impact analysis (idle vs. load): [`analiza/analiza.py`](analiza/analiza.py) → [`analiza/rezultati_analiza.txt`](analiza/rezultati_analiza.txt)
+- Higher-throughput variant: [`visoka-test.sh`](visoka-test.sh)
+- Raw `docker stats` samples (4 rounds × 5 configurations): [`meritve/meritve.csv`](meritve/meritve.csv)
+- Per-configuration k6 output: [`meritve/`](meritve/)
 
-The analysis compares CPU/RAM consumption of the monitoring stack at idle versus under load to quantify the overhead introduced by monitoring and logging.
+**Optimization campaign.** Five Logstash pipeline configurations were compared: **A** baseline, **B** without the `stdout` output, **C** with a `/metrics` drop filter, **D** both, and **E** additionally with adjusted batch processing (`pipeline.batch.size: 500`, `pipeline.batch.delay: 1000`). Each was measured four times, reporting the mean and standard deviation.
+
+**Result (CPU under load, % of one core):**
+
+| Component | Baseline (A) | Optimized (E) |
+|---|---|---|
+| Elasticsearch | 10.34 | 3.01 |
+| Logstash | 29.91 | 7.09 |
+| Kibana | 11.17 | 7.05 |
+| cAdvisor | 3.66 | 2.99 |
+| Prometheus | 0.53 | 0.26 |
+| AlertManager | 0.64 | 0.32 |
+| Grafana | 0.32 | 0.16 |
+| Node Exporter | 0.18 | 0.24 |
+| **Total** | **56.76** | **21.11** |
+
+Total CPU dropped by ~63%, most of it from batch processing alone (~53%). Batching cost about one second of added latency and caused no event loss; memory stayed essentially static (~3.6 GB), bounded by the fixed JVM heaps. A higher-throughput test (~124 req/s) confirmed the overhead grows sub-linearly with load.
 
 ---
 
@@ -188,12 +205,14 @@ diploma-monitoring/
 │   └── pipeline/logstash.conf      # Log ingestion pipeline
 ├── loadtest/
 │   └── sonus-ventis-loadtest.js    # k6 load test scenario
-├── analiza/
-│   ├── analiza.py                  # Resource impact analysis script
-│   ├── idle_raw.csv / idle_clean.csv
-│   ├── load_raw.csv
-│   ├── k6_output.txt
-│   └── rezultati_analiza.txt       # Analysis results
+├── meritve/
+│   ├── meritve.csv                 # Raw docker stats samples (4 rounds × 5 configs)
+│   ├── k6-4-A-izhodisce.txt        # k6 output per configuration
+│   ├── k6-4-B-brez-stdout.txt
+│   ├── k6-4-C-samo-filter.txt
+│   ├── k6-4-D-oboje.txt
+│   └── k6-4-E-paketno.txt
+├── visoka-test.sh                  # Higher-throughput load test variant
 └── docs/
     └── screenshots/                # Screenshots used in this README
 ```
